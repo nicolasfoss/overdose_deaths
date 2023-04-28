@@ -190,7 +190,7 @@ summarize_df <- function(df) {
 ### Bind the summarized data.frames for plots of the aggregate data.
 ###_____________________________________________________________________________
 
-# read in and summarized 2015.
+# read in and summarize 2015.
 
 SUD_admit_2015 <- read_csv("tedsa_puf_2015.csv",
                            col_select = all_of(selected_cols)
@@ -198,7 +198,7 @@ SUD_admit_2015 <- read_csv("tedsa_puf_2015.csv",
 
 SUD_admit_2015_summarized <- summarize_df(SUD_admit_2015)
 
-# read in and summarized 2016.
+# read in and summarize 2016.
 
 SUD_admit_2016 <- read_csv("tedsa_puf_2016.csv",
                            col_select = all_of(selected_cols)
@@ -206,7 +206,7 @@ SUD_admit_2016 <- read_csv("tedsa_puf_2016.csv",
 
 SUD_admit_2016_summarized <- summarize_df(SUD_admit_2016)
 
-# read in and summarized 2017.
+# read in and summarize 2017.
 
 SUD_admit_2017 <- read_csv("tedsa_puf_2017.csv",
                            col_select = all_of(selected_cols)
@@ -214,7 +214,7 @@ SUD_admit_2017 <- read_csv("tedsa_puf_2017.csv",
 
 SUD_admit_2017_summarized <- summarize_df(SUD_admit_2017)
 
-# read in and summarized 2018.
+# read in and summarize 2018.
 
 SUD_admit_2018 <- read_csv("tedsa_puf_2018.csv",
                            col_select = all_of(selected_cols)
@@ -222,7 +222,7 @@ SUD_admit_2018 <- read_csv("tedsa_puf_2018.csv",
 
 SUD_admit_2018_summarized <- summarize_df(SUD_admit_2018)
 
-# read in and summarized 2019.
+# read in and summarize 2019.
 
 SUD_admit_2019 <- read_csv("tedsa_puf_2019.csv",
                            col_select = all_of(selected_cols)
@@ -230,7 +230,7 @@ SUD_admit_2019 <- read_csv("tedsa_puf_2019.csv",
 
 SUD_admit_2019_summarized <- summarize_df(SUD_admit_2019)
 
-# read in and summarized 2020.
+# read in and summarize 2020.
 
 SUD_admit_2020 <- read_csv("TEDSA_PUF_2020.csv",
                            col_select = all_of(selected_cols)
@@ -238,7 +238,7 @@ SUD_admit_2020 <- read_csv("TEDSA_PUF_2020.csv",
 
 SUD_admit_2020_summarized <- summarize_df(SUD_admit_2020)
 
-# Bind rows for the summarized dfs.
+# Bind rows for the summarize dfs.
 
 SUD_admit_2015_2020 <- bind_rows(SUD_admit_2015_summarized, 
                                  SUD_admit_2016_summarized, 
@@ -251,21 +251,26 @@ SUD_admit_2015_2020 <- bind_rows(SUD_admit_2015_summarized,
 # Perform a join of the two main data.frames to then plot.
 
 SUD_admit_deaths <- SUD_admit_2015_2020 %>% 
-  left_join(OD_deaths_clean, by = c("Year", "State"), suffix = c("_admit", "_deaths"))
+  left_join(OD_deaths_clean, 
+            by = c("Year", "State"), 
+            suffix = c("_admit", "_deaths")
+            )
 
 ###_____________________________________________________________________________
 ### Plots.
 ###_____________________________________________________________________________
+
+# Check the distribution of the variables first.
 
 par(mfrow = c(3,2))
 with(OD_deaths_clean, hist(Total_Overdose_Deaths))
 with(OD_deaths_clean, hist(All_opioids))
 with(OD_deaths_clean, plot(density(Total_Overdose_Deaths)))
 with(OD_deaths_clean, plot(density(All_opioids)))
-with(OD_deaths_clean, plot(factor(Year), Total_Overdose_Deaths))
-with(OD_deaths_clean, plot(factor(Year), All_opioids))
+with(OD_deaths_clean, plot(factor(Year), Total_Overdose_Deaths)) # a box plot!!
+with(OD_deaths_clean, plot(factor(Year), All_opioids)) # again!!
 
-dev.off() # reset params
+dev.off() # reset params after par(mfrow) call.
 
 # similar distributions, boxplots show an alarming growth in opioid deaths.
 
@@ -396,12 +401,13 @@ wrap_plots(all_plots, ncol = 2, nrow = 2) # dashboard
 
 paste0("There is a n r = ", with(SUD_admit_deaths, round(cor(Total_Overdose_Deaths, Admissions), digits = 6)),
        " correlation between SUD admissions and Overdose deaths in the U.S. Midwest from 2015-2020"
-)
+       )
 
 ###_____________________________________________________________________________
-# "There is a n r = 0.542304 correlation between SUD admissions and Overdose deaths in the U.S. Midwest from 2015-2020"
-# Not that strong, but positive, indicating that admissions do not seem to follow overdose deaths very closely, but they
-# do increase together.
+# "There is a n r = 0.542304 correlation between SUD admissions and Overdose deaths 
+# in the U.S. Midwest from 2015-2020"
+# Moderate and positive correlation, indicating that admissions do not seem to 
+# follow overdose deaths very closely, but they do increase together.
 # Now let's fit a linear regression model to these data to find relationships.
 ###_____________________________________________________________________________
 
@@ -419,7 +425,8 @@ autoplot(death_model, which = 1:4) # errors are not normally distributed
 
 tidy(death_model)
 augment(death_model)
-glance(death_model) # strong r^2 value indicating apprx. 80% of the variance is explaind by the model.
+glance(death_model) # strong r^2 value indicating apprx. 
+                    # 80% of the variance is explaind by the model.
 
 # Plot the predictions based on the model to gauge performance.
 
@@ -440,14 +447,22 @@ ggplot(OD_deaths_test_p, aes(All_opioids, Total_Overdose_Deaths)) +
              size = 2.25,
              shape = 2,
              alpha = 0.5
-             ) + # The model performs reasonably well.
+             ) + 
   geom_text(aes(x = 10000, y = 40000, label = "Predicted values in yellow\nfor 2021-2022 Midwestern\nTotal Overdose Deaths"),
             color = "yellow",
             size = 5,
             fontface = "bold"
             ) +
-  theme_dark()
+  theme_dark() # The model performs reasonably well.
 
+###_____________________________________________________________________________
+# The model could be improved by possibly using the monthly data.
+# Another way to improve the model could be adding other variables, such as
+# each type of opioid with the stimulants.  However, problems with data quality
+# from the states added noise to the model unescapably.
+# The SAMHSA data is reported annually and so the admissions ~ opioid OD deaths
+# model is not possible with these data sets.  
+###_____________________________________________________________________________
   
 ###_____________________________________________________________________________
 # Noise in the model seems to be making it difficult to predict future deaths with
